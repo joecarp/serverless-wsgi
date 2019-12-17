@@ -11,16 +11,8 @@ import json
 import os
 import sys
 import traceback
-
-# Call decompression helper from `serverless-python-requirements` if
-# available. See: https://github.com/UnitedIncome/serverless-python-requirements#dealing-with-lambdas-size-limitations
-try:
-    import unzip_requirements  # noqa
-except ImportError:
-    pass
-
+import lambda_imports
 import serverless_wsgi
-
 
 def load_config():
     """ Read the configuration file created during deployment
@@ -116,5 +108,6 @@ def _create_app():
 
 # Read configuration and import the WSGI application
 config = load_config()
+lambda_imports.manage_imports(config)
 wsgi_app = import_app(config)
 append_text_mime_types(config)

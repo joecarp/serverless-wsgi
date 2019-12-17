@@ -94,7 +94,7 @@ class ServerlessWSGI {
       this.serverless.service.package.include = _.union(
         this.serverless.service.package.include,
         _.map(
-          ["wsgi_handler.py", "serverless_wsgi.py", ".serverless-wsgi"],
+          ["wsgi_handler.py", "serverless_wsgi.py", "lambda_imports.py", ".serverless-wsgi"],
           artifact =>
             path.join(
               path.relative(
@@ -170,6 +170,14 @@ class ServerlessWSGI {
       config.text_mime_types = this.serverless.service.custom.wsgi.textMimeTypes;
     }
 
+    if (this.serverless.service.custom.wsgi.use_layers) {
+      config.use_layers = true;
+    }
+
+    if (this.serverless.service.custom.wsgi.use_layers &&
+        this.serverless.service.custom.wsgi.layer_path) {
+      config.layer_path = this.serverless.service.custom.wsgi.layer_path;
+    }
     return config;
   }
 
@@ -197,6 +205,10 @@ class ServerlessWSGI {
       fse.writeFileAsync(
         path.join(this.packageRootPath, ".serverless-wsgi"),
         JSON.stringify(this.getWsgiHandlerConfiguration())
+      ),
+      fse.copyAsync(
+        path.resolve(__dirname, "lambda_imports.py"),
+        path.join(this.packageRootPath, "lambda_imports.py")
       )
     ]);
   }
@@ -346,6 +358,7 @@ class ServerlessWSGI {
     const artifacts = [
       "wsgi_handler.py",
       "serverless_wsgi.py",
+      "lambda_imports.py",
       ".serverless-wsgi"
     ];
 
